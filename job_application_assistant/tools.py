@@ -1,0 +1,62 @@
+import os
+from google.cloud import firestore
+from datetime import datetime
+
+db = firestore.Client(project=os.getenv("GOOGLE_CLOUD_PROJECT"))
+
+def save_job_application(
+    company: str,
+    role: str,
+    required_skills: str,
+    match_score: str,
+    status: str = "pending"
+) -> dict:
+    """Saves a job application to Firestore database."""
+    doc_ref = db.collection("job_applications").document()
+    data = {
+        "company": company,
+        "role": role,
+        "required_skills": required_skills,
+        "match_score": match_score,
+        "status": status,
+        "applied_at": datetime.utcnow().isoformat()
+    }
+    doc_ref.set(data)
+    return {"status": "saved", "id": doc_ref.id, "data": data}
+
+def get_all_applications() -> dict:
+    """Retrieves all job applications from Firestore."""
+    docs = db.collection("job_applications").stream()
+    applications = []
+    for doc in docs:
+        app = doc.to_dict()
+        app["id"] = doc.id
+        applications.append(app)
+    return {"applications": applications, "count": len(applications)}
+
+def get_user_profile() -> dict:
+    """Retrieves user profile from Firestore."""
+    doc = db.collection("user_profile").document("main").get()
+    if doc.exists:
+        return doc.to_dict()
+    return {
+        "name": "Yusra Batool",
+        "skills": [
+            "Python", "Google ADK", "Machine Learning",
+            "SQL", "Java", "Cloud Run", "Vertex AI",
+            "LangChain", "Docker", "Data Analytics"
+        ],
+        "education": "BS Computer Science - Sukkur IBA University",
+        "gpa": "3.74",
+        "experience": [
+            "Deloitte Data Analytics Simulation",
+            "Gemini AI Chatbot Integration",
+            "MediGuide AI Agent - Cloud Run Deployment"
+        ]
+    }
+
+def update_application_status(application_id: str, status: str) -> dict:
+    """Updates the status of a job application."""
+    doc_ref = db.collection("job_applications").document(application_id)
+    doc_ref.update({"status": status})
+    return {"status": "updated", "id": application_id, "new_status": status}

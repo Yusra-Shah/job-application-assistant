@@ -6,7 +6,8 @@ from job_application_assistant.tools import (
     save_job_application,
     get_all_applications,
     get_user_profile,
-    update_application_status
+    update_application_status,
+    send_email_summary
 )
 
 load_dotenv()
@@ -86,31 +87,23 @@ cover_letter_agent = Agent(
 email_agent = Agent(
     name="email_agent",
     model=model,
-    description="Sends the application summary email to the user.",
+    description="Sends application summary email to user.",
     instruction="""
     You are an email coordinator. Using {job_analysis}, {match_result} and {cover_letter}:
     
-    Compose a clean summary email to shahyusra05@gmail.com with:
+    Call send_email_summary with:
+    - to_email: shahyusra05@gmail.com
+    - subject: Job Application Summary - [ROLE] at [COMPANY]
+    - body: Full summary including match score, skills, cover letter and application ID
     
-    Subject: Job Application Summary - [ROLE] at [COMPANY]
-    
-    Body:
-    - Match Score and recommendation
-    - Matching skills
-    - Missing skills  
-    - The full cover letter
-    - Application ID for tracking
-    
-    Make it clean, professional and easy to read.
-    End with: "This application has been saved to your database."
-    
-    Note: Email sending requires Gmail MCP integration.
-    Confirm the summary has been prepared successfully.
+    Confirm email was sent successfully.
     """,
+    tools=[send_email_summary],
     output_key="email_summary"
 )
 
 # --- Sequential Workflow ---
+
 application_workflow = SequentialAgent(
     name="application_workflow",
     description="Full job application workflow: analyze, match, write, email.",
@@ -122,19 +115,12 @@ application_workflow = SequentialAgent(
     ]
 )
 
-# --- Root Manager Agent ---
 root_agent = Agent(
     name="job_assistant_manager",
     model=model,
-    description="Job Application Assistant - helps you manage and track job applications.",
+    description="Job Application Assistant - helps manage and track job applications.",
     instruction="""
     You are SmartApply — an intelligent job application assistant.
-    
-    You help users with:
-    1. Analyzing job descriptions and finding fit
-    2. Writing personalized cover letters
-    3. Tracking applications in database
-    4. Viewing all past applications
     
     When user provides a job description:
     - Transfer to application_workflow immediately

@@ -60,3 +60,33 @@ def update_application_status(application_id: str, status: str) -> dict:
     doc_ref = db.collection("job_applications").document(application_id)
     doc_ref.update({"status": status})
     return {"status": "updated", "id": application_id, "new_status": status}
+
+import base64
+from email.mime.text import MIMEText
+from googleapiclient.discovery import build
+from google.auth import default
+
+def send_email_summary(
+    to_email: str,
+    subject: str,
+    body: str
+) -> dict:
+    """Sends an email summary using Gmail API."""
+    try:
+        credentials, project = default(
+            scopes=['https://www.googleapis.com/auth/gmail.send']
+        )
+        service = build('gmail', 'v1', credentials=credentials)
+        message = MIMEText(body)
+        message['to'] = to_email
+        message['subject'] = subject
+        raw = base64.urlsafe_b64encode(
+            message.as_bytes()
+        ).decode()
+        service.users().messages().send(
+            userId='me',
+            body={'raw': raw}
+        ).execute()
+        return {"status": "email_sent", "to": to_email}
+    except Exception as e:
+        return {"status": "email_prepared", "note": str(e)}

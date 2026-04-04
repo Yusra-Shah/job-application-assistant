@@ -96,3 +96,18 @@ def send_email_summary(
             "subject": subject,
             "note": "Will be sent via Cloud Run deployment"
         }
+
+def get_application_stats() -> dict:
+    """Returns a summary of all job applications grouped by status."""
+    docs = db.collection("job_applications").stream()
+    stats = {"total": 0, "pending": 0, "applied": 0, "interview": 0, "rejected": 0, "offer": 0}
+    companies = []
+    for doc in docs:
+        data = doc.to_dict()
+        stats["total"] += 1
+        status = data.get("status", "pending")
+        if status in stats:
+            stats[status] += 1
+        companies.append(f"{data.get('role')} at {data.get('company')}")
+    stats["applications"] = companies
+    return stats

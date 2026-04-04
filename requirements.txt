@@ -1,7 +1,7 @@
 google-adk==1.14.0
 langchain-community==0.3.27
-google-cloud-firestore
-google-cloud-logging
+google-cloud-firestore==2.19.0
+google-cloud-logging==3.15.0
 python-dotenv
 google-auth-oauthlib
 google-auth-httplib2

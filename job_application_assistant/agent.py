@@ -9,10 +9,8 @@ from job_application_assistant.tools import (
     send_email_summary,
     get_application_stats
 )
-
 load_dotenv()
 model = os.getenv("MODEL")
-
 analyzer_agent = Agent(
     name="analyzer_agent",
     model=model,
@@ -25,7 +23,6 @@ analyzer_agent = Agent(
 Format: COMPANY: [name] ROLE: [title] REQUIRED_SKILLS: [list] EXPERIENCE_LEVEL: [level]""",
     output_key="job_analysis"
 )
-
 matcher_agent = Agent(
     name="matcher_agent",
     model=model,
@@ -35,7 +32,6 @@ Format: MATCH_SCORE: [n]/100 MATCHING_SKILLS: [list] MISSING_SKILLS: [list] RECO
     tools=[get_user_profile, save_job_application],
     output_key="match_result"
 )
-
 cover_letter_agent = Agent(
     name="cover_letter_agent",
     model=model,
@@ -43,7 +39,6 @@ cover_letter_agent = Agent(
     instruction="""Using {job_analysis} and {match_result}, write a 3-paragraph cover letter. Be specific, professional, confident. Sign off as Yusra Batool.""",
     output_key="cover_letter"
 )
-
 email_agent = Agent(
     name="email_agent",
     model=model,
@@ -52,7 +47,6 @@ email_agent = Agent(
     tools=[send_email_summary],
     output_key="email_result"
 )
-
 scheduler_agent = Agent(
     name="scheduler_agent",
     model=model,
@@ -60,13 +54,11 @@ scheduler_agent = Agent(
     instruction="""Using {job_analysis} and {match_result}: if APPLY, create a follow-up note for 7 days from today. Include Application ID.""",
     output_key="schedule_result"
 )
-
 application_workflow = SequentialAgent(
     name="application_workflow",
     description="Full job application workflow.",
     sub_agents=[analyzer_agent, matcher_agent, cover_letter_agent, email_agent, scheduler_agent]
 )
-
 root_agent = Agent(
     name="job_assistant_manager",
     model=model,

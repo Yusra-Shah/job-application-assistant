@@ -3,5 +3,4 @@ WORKDIR /app
 COPY mcp_requirements.txt .
 RUN pip install -r mcp_requirements.txt
 COPY mcp_server.py .
-ENV PORT=8080
 CMD ["python", "mcp_server.py"]

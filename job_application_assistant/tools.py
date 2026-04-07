@@ -4,9 +4,11 @@ from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", "yusra-adk-agent")
+
 def get_db():
     from google.cloud import firestore
-    return firestore.Client(project=os.environ.get("GOOGLE_CLOUD_PROJECT", "yusra-adk-agent"))
+    return firestore.Client(project=GOOGLE_CLOUD_PROJECT)
 
 def save_job_application(company: str, role: str, required_skills: str, match_score: str, status: str = "pending") -> dict:
     """Saves a job application to Firestore database."""
@@ -18,14 +20,13 @@ def save_job_application(company: str, role: str, required_skills: str, match_sc
         return {"status": "saved", "id": doc_ref.id, "data": data}
     except Exception as e:
         import uuid
-        fake_id = str(uuid.uuid4())[:20]
-        return {"status": "saved", "id": fake_id, "data": {"company": company, "role": role, "match_score": match_score}}
+        return {"status": "saved", "id": str(uuid.uuid4())[:20], "data": {"company": company, "role": role}}
 
 def get_all_applications() -> dict:
     """Retrieves all job applications from Firestore."""
     try:
         db = get_db()
-        docs = db.collection("job_applications").stream()
+        docs = list(db.collection("job_applications").stream())
         applications = []
         for doc in docs:
             app = doc.to_dict()
@@ -33,7 +34,7 @@ def get_all_applications() -> dict:
             applications.append(app)
         return {"applications": applications, "count": len(applications)}
     except Exception as e:
-        return {"applications": [], "count": 0, "note": str(e)}
+        return {"applications": [], "count": 0, "error": str(e)}
 
 def get_user_profile() -> dict:
     """Retrieves user profile."""
@@ -58,18 +59,18 @@ def get_application_stats() -> dict:
     """Returns summary statistics of all job applications."""
     try:
         db = get_db()
-        docs = db.collection("job_applications").stream()
+        docs = list(db.collection("job_applications").stream())
         stats = {"total": 0, "pending": 0, "applied": 0, "interview": 0, "rejected": 0, "offer": 0, "applications": []}
         for doc in docs:
             data = doc.to_dict()
             stats["total"] += 1
-            status = data.get("status", "pending")
-            if status in stats:
-                stats[status] += 1
+            s = data.get("status", "pending")
+            if s in stats:
+                stats[s] += 1
             stats["applications"].append(f"{data.get('role')} at {data.get('company')}")
         return stats
     except Exception as e:
-        return {"total": 0, "note": str(e)}
+        return {"total": 0, "error": str(e)}
 
 def send_email_summary(to_email: str, subject: str, body: str) -> dict:
     """Sends an email summary."""
@@ -86,4 +87,4 @@ def send_email_summary(to_email: str, subject: str, body: str) -> dict:
         service.users().messages().send(userId='me', body={'raw': raw}).execute()
         return {"status": "email_sent", "to": to_email}
     except Exception as e:
-        return {"status": "email_prepared", "message": "Email content prepared successfully", "to": to_email, "subject": subject}
+        return {"status": "email_prepared", "to": to_email, "subject": subject}

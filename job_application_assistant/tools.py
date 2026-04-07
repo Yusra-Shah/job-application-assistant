@@ -1,14 +1,19 @@
 import os
 import base64
+import logging
 from datetime import datetime
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-GOOGLE_CLOUD_PROJECT = os.environ.get("GOOGLE_CLOUD_PROJECT", "yusra-adk-agent")
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+PROJECT = "yusra-adk-agent"
 
 def get_db():
     from google.cloud import firestore
-    return firestore.Client(project=GOOGLE_CLOUD_PROJECT)
+    logger.info(f"Connecting to Firestore project: {PROJECT}")
+    return firestore.Client(project=PROJECT)
 
 def save_job_application(company: str, role: str, required_skills: str, match_score: str, status: str = "pending") -> dict:
     """Saves a job application to Firestore database."""
@@ -17,8 +22,10 @@ def save_job_application(company: str, role: str, required_skills: str, match_sc
         doc_ref = db.collection("job_applications").document()
         data = {"company": company, "role": role, "required_skills": required_skills, "match_score": match_score, "status": status, "applied_at": datetime.utcnow().isoformat()}
         doc_ref.set(data)
+        logger.info(f"Saved application: {doc_ref.id}")
         return {"status": "saved", "id": doc_ref.id, "data": data}
     except Exception as e:
+        logger.error(f"save_job_application error: {e}")
         import uuid
         return {"status": "saved", "id": str(uuid.uuid4())[:20], "data": {"company": company, "role": role}}
 
@@ -27,6 +34,7 @@ def get_all_applications() -> dict:
     try:
         db = get_db()
         docs = list(db.collection("job_applications").stream())
+        logger.info(f"Retrieved {len(docs)} applications")
         applications = []
         for doc in docs:
             app = doc.to_dict()
@@ -34,6 +42,7 @@ def get_all_applications() -> dict:
             applications.append(app)
         return {"applications": applications, "count": len(applications)}
     except Exception as e:
+        logger.error(f"get_all_applications error: {e}")
         return {"applications": [], "count": 0, "error": str(e)}
 
 def get_user_profile() -> dict:
@@ -53,6 +62,7 @@ def update_application_status(application_id: str, status: str) -> dict:
         db.collection("job_applications").document(application_id).update({"status": status})
         return {"status": "updated", "id": application_id, "new_status": status}
     except Exception as e:
+        logger.error(f"update_application_status error: {e}")
         return {"status": "updated", "id": application_id, "new_status": status}
 
 def get_application_stats() -> dict:
@@ -70,6 +80,7 @@ def get_application_stats() -> dict:
             stats["applications"].append(f"{data.get('role')} at {data.get('company')}")
         return stats
     except Exception as e:
+        logger.error(f"get_application_stats error: {e}")
         return {"total": 0, "error": str(e)}
 
 def send_email_summary(to_email: str, subject: str, body: str) -> dict:
@@ -87,4 +98,5 @@ def send_email_summary(to_email: str, subject: str, body: str) -> dict:
         service.users().messages().send(userId='me', body={'raw': raw}).execute()
         return {"status": "email_sent", "to": to_email}
     except Exception as e:
+        logger.error(f"send_email error: {e}")
         return {"status": "email_prepared", "to": to_email, "subject": subject}

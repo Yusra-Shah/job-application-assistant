@@ -83,16 +83,19 @@ def get_application_stats() -> dict:
 def send_email_summary(to_email: str, subject: str, body: str) -> dict:
     """Sends an email summary using Gmail SMTP."""
     try:
-        try:
-            import yagmail
-        except ImportError:
-            import subprocess, sys
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "yagmail"])
-            import yagmail
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
         gmail_user = os.getenv("GMAIL_USER")
         gmail_password = os.getenv("GMAIL_APP_PASSWORD")
-        yag = yagmail.SMTP(user=gmail_user, password=gmail_password, host="smtp.gmail.com", port=465, smtp_ssl=True)
-        yag.send(to=to_email, subject=subject, contents=body)
+        msg = MIMEMultipart()
+        msg["From"] = gmail_user
+        msg["To"] = to_email
+        msg["Subject"] = subject
+        msg.attach(MIMEText(body, "plain"))
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
+            server.login(gmail_user, gmail_password)
+            server.sendmail(gmail_user, to_email, msg.as_string())
         logger.info(f"Email sent to {to_email}")
         return {"status": "email_sent", "to": to_email}
     except Exception as e:

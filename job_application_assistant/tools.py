@@ -91,8 +91,8 @@ def send_email_summary(to_email: str, subject: str, body: str) -> dict:
             import yagmail
         gmail_user = os.getenv("GMAIL_USER")
         gmail_password = os.getenv("GMAIL_APP_PASSWORD")
-        yag = yagmail.SMTP(gmail_user, gmail_password)
-        yag.send(to_email, subject, body)
+        yag = yagmail.SMTP(user=gmail_user, password=gmail_password, host="smtp.gmail.com", port=465, smtp_ssl=True)
+        yag.send(to=to_email, subject=subject, contents=body)
         logger.info(f"Email sent to {to_email}")
         return {"status": "email_sent", "to": to_email}
     except Exception as e:

@@ -83,7 +83,12 @@ def get_application_stats() -> dict:
 def send_email_summary(to_email: str, subject: str, body: str) -> dict:
     """Sends an email summary using Gmail SMTP."""
     try:
-        import yagmail
+        try:
+            import yagmail
+        except ImportError:
+            import subprocess, sys
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "yagmail"])
+            import yagmail
         gmail_user = os.getenv("GMAIL_USER")
         gmail_password = os.getenv("GMAIL_APP_PASSWORD")
         yag = yagmail.SMTP(gmail_user, gmail_password)
@@ -114,3 +119,12 @@ def create_calendar_event(summary: str, description: str, days_from_now: int = 7
     except Exception as e:
         logger.error(f"create_calendar_event error: {e}")
         return {"status": "failed", "error": str(e)}
+
+
+def _ensure_yagmail():
+    import importlib
+    try:
+        importlib.import_module("yagmail")
+    except ImportError:
+        import subprocess, sys
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "yagmail"])

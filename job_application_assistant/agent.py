@@ -62,8 +62,8 @@ scheduler_agent = Agent(
     name="scheduler_agent",
     model=model,
     description="Generates a Google Calendar quick-add link for follow-up.",
-    instruction="""Using {job_analysis} and {match_result}: if RECOMMENDATION is APPLY, call create_calendar_event with summary='Follow up: [ROLE] at [COMPANY]', description='Application ID: [APPLICATION_ID]. Follow up on your job application.', days_from_now=7.
-Return the calendar_link from the result so the user can click it to add the reminder to their Google Calendar.""",
+    instruction="""Using {job_analysis} and {match_result}: if RECOMMENDATION is APPLY, extract the APPLICATION_ID value from {match_result}, then call create_calendar_event with summary='Follow up: [ROLE] at [COMPANY]', description='Application ID: ' + APPLICATION_ID + '. Follow up on your job application.', days_from_now=7.
+Return the calendar_link from the result and tell the user to click it to add the follow-up reminder to their Google Calendar.""",
     tools=[create_calendar_event],
     output_key="schedule_result"
 )

@@ -1,9 +1,6 @@
 import os
-import base64
 import logging
 from datetime import datetime
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -84,19 +81,36 @@ def get_application_stats() -> dict:
         return {"total": 0, "error": str(e)}
 
 def send_email_summary(to_email: str, subject: str, body: str) -> dict:
-    """Sends an email summary."""
+    """Sends an email summary using Gmail SMTP."""
     try:
-        from googleapiclient.discovery import build
-        from google.auth import default
-        credentials, project = default()
-        service = build('gmail', 'v1', credentials=credentials)
-        message = MIMEMultipart()
-        message['to'] = to_email
-        message['subject'] = subject
-        message.attach(MIMEText(body, 'plain'))
-        raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
-        service.users().messages().send(userId='me', body={'raw': raw}).execute()
+        import yagmail
+        gmail_user = os.getenv("GMAIL_USER")
+        gmail_password = os.getenv("GMAIL_APP_PASSWORD")
+        yag = yagmail.SMTP(gmail_user, gmail_password)
+        yag.send(to_email, subject, body)
+        logger.info(f"Email sent to {to_email}")
         return {"status": "email_sent", "to": to_email}
     except Exception as e:
         logger.error(f"send_email error: {e}")
-        return {"status": "email_prepared", "to": to_email, "subject": subject}
+        return {"status": "email_failed", "error": str(e), "to": to_email}
+
+def create_calendar_event(summary: str, description: str, days_from_now: int = 7) -> dict:
+    """Generates a Google Calendar quick-add link for job application follow-up."""
+    try:
+        from datetime import timedelta
+        from urllib.parse import urlencode
+        start = datetime.utcnow() + timedelta(days=days_from_now)
+        end = start + timedelta(hours=1)
+        date_format = "%Y%m%dT%H%M%SZ"
+        params = {
+            "action": "TEMPLATE",
+            "text": summary,
+            "details": description,
+            "dates": f"{start.strftime(date_format)}/{end.strftime(date_format)}",
+        }
+        link = "https://calendar.google.com/calendar/render?" + urlencode(params)
+        logger.info(f"Calendar quick-add link generated: {link}")
+        return {"status": "link_generated", "calendar_link": link, "summary": summary, "follow_up_date": start.strftime("%Y-%m-%d")}
+    except Exception as e:
+        logger.error(f"create_calendar_event error: {e}")
+        return {"status": "failed", "error": str(e)}

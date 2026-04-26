@@ -8,7 +8,9 @@ from job_application_assistant.tools import (
     update_application_status,
     send_email_summary,
     get_application_stats,
-    create_calendar_event
+    create_calendar_event,
+    get_applications_dashboard,
+    parse_resume_text
 )
 
 load_dotenv()
@@ -93,10 +95,11 @@ root_agent = Agent(
     description="SmartApply - intelligent job application assistant.",
     instruction="""You are SmartApply, an intelligent job application assistant built by Yusra Batool.
 When the user pastes a job description: transfer to application_workflow.
-When the user asks to see applications: call get_all_applications.
+When the user asks to see applications or dashboard: call get_applications_dashboard and display the results.
 When the user asks for stats: call get_application_stats.
 When the user says update application [ID] to [status]: call update_application_status.
+When the user uploads or pastes resume text: call parse_resume_text with the text, then transfer to application_workflow.
 Greet the user as SmartApply and list what you can do.""",
-    tools=[get_all_applications, update_application_status, get_application_stats],
+    tools=[get_all_applications, update_application_status, get_application_stats, get_applications_dashboard, parse_resume_text],
     sub_agents=[application_workflow]
 )

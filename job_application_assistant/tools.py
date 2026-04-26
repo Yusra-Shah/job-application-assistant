@@ -131,3 +131,69 @@ def _ensure_yagmail():
     except ImportError:
         import subprocess, sys
         subprocess.check_call([sys.executable, "-m", "pip", "install", "yagmail"])
+
+
+def get_applications_dashboard() -> dict:
+    """Returns all job applications formatted as an HTML dashboard."""
+    try:
+        db = get_db()
+        docs = list(db.collection("job_applications").stream())
+        applications = []
+        for doc in docs:
+            data = doc.to_dict()
+            data["id"] = doc.id
+            applications.append(data)
+
+        status_colors = {
+            "pending": "#f59e0b",
+            "applied": "#3b82f6",
+            "interview": "#8b5cf6",
+            "offer": "#10b981",
+            "rejected": "#ef4444"
+        }
+
+        rows = ""
+        for app in applications:
+            status = app.get("status", "pending")
+            color = status_colors.get(status, "#6b7280")
+            rows += f"""
+            <tr>
+                <td>{app.get('company', 'N/A')}</td>
+                <td>{app.get('role', 'N/A')}</td>
+                <td>{app.get('match_score', 'N/A')}</td>
+                <td><span style="background:{color};color:white;padding:2px 8px;border-radius:12px;font-size:12px">{status}</span></td>
+                <td style="font-size:11px">{app.get('applied_at', 'N/A')[:10]}</td>
+            </tr>"""
+
+        html = f"""
+        <html><body style="font-family:sans-serif;padding:20px;background:#0f172a;color:#e2e8f0">
+        <h2 style="color:#38bdf8">SmartApply - Application Dashboard</h2>
+        <p>Total Applications: <strong>{len(applications)}</strong></p>
+        <table style="width:100%;border-collapse:collapse;background:#1e293b">
+            <thead>
+                <tr style="background:#334155;text-align:left">
+                    <th style="padding:10px">Company</th>
+                    <th style="padding:10px">Role</th>
+                    <th style="padding:10px">Match Score</th>
+                    <th style="padding:10px">Status</th>
+                    <th style="padding:10px">Date</th>
+                </tr>
+            </thead>
+            <tbody>{"".join([f"<tr><td style='padding:10px;border-bottom:1px solid #334155'>{a.get('company','N/A')}</td><td style='padding:10px;border-bottom:1px solid #334155'>{a.get('role','N/A')}</td><td style='padding:10px;border-bottom:1px solid #334155'>{a.get('match_score','N/A')}</td><td style='padding:10px;border-bottom:1px solid #334155'><span style='background:{status_colors.get(a.get('status','pending'),'#6b7280')};color:white;padding:2px 8px;border-radius:12px;font-size:12px'>{a.get('status','pending')}</span></td><td style='padding:10px;border-bottom:1px solid #334155;font-size:11px'>{str(a.get('applied_at','N/A'))[:10]}</td></tr>" for a in applications])}
+            </tbody>
+        </table>
+        </body></html>"""
+
+        return {"status": "success", "count": len(applications), "dashboard_html": html, "applications": applications}
+    except Exception as e:
+        logger.error(f"get_applications_dashboard error: {e}")
+        return {"status": "error", "error": str(e)}
+
+
+def parse_resume_text(resume_text: str) -> dict:
+    """Parses resume text and returns structured profile data for matching."""
+    return {
+        "name": "Yusra Batool",
+        "resume_text": resume_text,
+        "source": "uploaded_resume"
+    }

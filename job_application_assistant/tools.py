@@ -134,29 +134,23 @@ def _ensure_yagmail():
 
 
 def get_applications_dashboard() -> dict:
-    """Returns all job applications as a summary list."""
-    try:
-        db = get_db()
-        docs = list(db.collection("job_applications").stream())
-        applications = []
-        for doc in docs:
-            data = doc.to_dict()
-            data["id"] = doc.id
-            applications.append(data)
-        summary = []
-        for a in applications:
-            summary.append({
-                "company": a.get("company", "N/A"),
-                "role": a.get("role", "N/A"),
-                "match_score": a.get("match_score", "N/A"),
-                "status": a.get("status", "pending"),
-                "date": str(a.get("applied_at", "N/A"))[:10],
-                "id": a.get("id", "")
-            })
-        return {"status": "success", "count": len(summary), "applications": summary}
-    except Exception as e:
-        logger.error(f"get_applications_dashboard error: {e}")
-        return {"status": "error", "error": str(e)}
+    """Returns all job applications as a summary list for the dashboard."""
+    result = get_all_applications()
+    if "error" in result:
+        logger.error(f"get_applications_dashboard error: {result['error']}")
+        return {"status": "error", "error": result["error"]}
+    applications = result.get("applications", [])
+    summary = []
+    for a in applications:
+        summary.append({
+            "company": a.get("company", "N/A"),
+            "role": a.get("role", "N/A"),
+            "match_score": a.get("match_score", "N/A"),
+            "status": a.get("status", "pending"),
+            "date": str(a.get("applied_at", "N/A"))[:10],
+            "id": a.get("id", "")
+        })
+    return {"status": "success", "count": len(summary), "applications": summary}
 
 
 def parse_resume_text(resume_text: str) -> dict:

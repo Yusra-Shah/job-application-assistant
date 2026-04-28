@@ -55,7 +55,12 @@ email_agent = Agent(
     name="email_agent",
     model=model,
     description="Sends email summary.",
-    instruction="""Using {job_analysis}, {match_result} and {cover_letter}: call send_email_summary with to_email=shahyusra05@gmail.com, subject=Job Application Summary - [ROLE] at [COMPANY], body=full summary.""",
+    instruction="""You must call the send_email_summary tool. Do not skip it. Do not simulate it.
+Using {job_analysis}, {match_result} and {cover_letter}:
+- to_email: shahyusra05@gmail.com
+- subject: Job Application Summary - [ROLE] at [COMPANY]
+- body: include match score, matching skills, missing skills, recommendation, application ID, and the cover letter
+Call send_email_summary now and report the result. Do not call any other tools.""",
     tools=[send_email_summary],
     output_key="email_result"
 )
@@ -65,7 +70,7 @@ scheduler_agent = Agent(
     model=model,
     description="Generates a Google Calendar quick-add link for follow-up.",
     instruction="""Using {job_analysis} and {match_result}: if RECOMMENDATION is APPLY, extract the APPLICATION_ID value from {match_result}, then call create_calendar_event with summary='Follow up: [ROLE] at [COMPANY]', description='Application ID: ' + APPLICATION_ID + '. Follow up on your job application.', days_from_now=7.
-Return the calendar_link from the result and tell the user to click it to add the follow-up reminder to their Google Calendar.""",
+Return only the calendar_link. Do not call any other tools. Do not show applications list.""",
     tools=[create_calendar_event],
     output_key="schedule_result"
 )

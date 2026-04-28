@@ -35,21 +35,20 @@ matcher_agent = Agent(
     description="Matches profile against job.",
     instruction="""Using {job_analysis}: call get_user_profile, compare skills, calculate match score 0-100, recommend APPLY if score >= 40, call save_job_application.
 
-Then output the result in this exact format:
+Output ONCE in this exact format, do not repeat:
 
 MATCH_SCORE: [n]/100
 MATCHING_SKILLS: [list]
 MISSING_SKILLS: [list]
 RECOMMENDATION: [APPLY/DO NOT APPLY]
-APPLICATION_ID: [id]
+APPLICATION_ID: [id from save_job_application result]
 
 MATCH ANALYSIS: [ROLE] at [COMPANY]
-[filled blocks based on score, use █ for filled and ░ for empty, 20 total blocks] [n]% Overall Match
+[20 █ blocks filled proportional to score] [n]% Overall Match
 
-Then for each skill in REQUIRED_SKILLS, show one line:
-[skill name]    [█ blocks proportional to match, 20 total] [Strong/Partial/Gap]
+[each required skill on its own line, max 30 chars for skill name padded with spaces, then 20 blocks, then Strong/Partial/Gap]
 
-Use Strong if skill is in MATCHING_SKILLS, Gap if in MISSING_SKILLS, Partial if related.""",
+Do not output anything twice.""",
     tools=[get_user_profile, save_job_application],
     output_key="match_result"
 )

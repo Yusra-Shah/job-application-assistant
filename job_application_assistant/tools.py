@@ -8,7 +8,12 @@ logger = logging.getLogger(__name__)
 PROJECT = "yusra-adk-agent"
 
 def get_db():
-    from google.cloud import firestore
+    try:
+        from google.cloud import firestore
+    except ImportError:
+        import subprocess, sys
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "google-cloud-firestore==2.19.0"])
+        from google.cloud import firestore
     logger.info(f"Connecting to Firestore project: {PROJECT}")
     return firestore.Client(project=PROJECT)
 

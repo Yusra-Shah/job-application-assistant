@@ -1,0 +1,11 @@
+[project]
+name = "job_application_assistant"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "google-adk==1.14.0",
+    "google-cloud-firestore==2.19.0",
+    "langchain-community==0.3.27",
+    "python-dotenv",
+    "yagmail",
+]

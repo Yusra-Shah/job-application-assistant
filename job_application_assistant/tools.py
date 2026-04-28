@@ -165,3 +165,64 @@ def parse_resume_text(resume_text: str) -> dict:
         "resume_text": resume_text,
         "source": "uploaded_resume"
     }
+
+
+def generate_tailored_resume(job_title: str, company: str, required_skills: str, matching_skills: str, missing_skills: str) -> dict:
+    """Generates a tailored resume text based on job requirements."""
+    resume = f"""YUSRA BATOOL
+Sukkur, Pakistan | shahyusra05@gmail.com | linkedin.com/in/yusra-batool-578a8433a | github.com/Yusra-Shah
+
+OBJECTIVE
+Motivated Computer Science student seeking {job_title} role at {company}. Bringing hands-on experience in AI/ML development, cloud deployment, and data analytics with a strong foundation in Python and Google Cloud.
+
+EDUCATION
+B.S. Computer Science | Sukkur IBA University, Pakistan | Expected June 2028 | GPA: 3.75/4.0
+
+RELEVANT SKILLS
+Matching: {matching_skills}
+Learning: {missing_skills}
+
+PROJECTS
+SmartApply - Multi-Agent AI Job Application Assistant
+- Architected a 6-agent pipeline using Google ADK SequentialAgent deployed on Cloud Run
+- Built Firestore integration, Gmail SMTP email, and Google Calendar quick-add link generation
+- Deployed MCP server via FastMCP exposing Firestore tools over SSE transport
+
+MediGuide AI Agent
+- Built multi-agent medical information assistant using Google ADK and Gemini 2.5 Flash
+- Integrated real-time Wikipedia research via LangChain, deployed on Google Cloud Run
+
+Matcha Journal - MLH AI Hackfest 2026
+- Built full-stack AI journaling app solo in 24 hours using Groq API (LLaMA 3.3 70B) and MongoDB Atlas
+- Deployed live on Streamlit Cloud with 54 registered participants
+
+Pneumonia Detection ML App
+- Building medical imaging application trained on chest X-ray datasets using CNNs and transfer learning
+
+Maze Adventure Game
+- GUI-based game implementing BFS, DFS, Dijkstra's algorithms; demonstrated at AI & CS Expo 2024
+
+EXPERIENCE
+Google Cloud Gen AI Academy APAC Edition - Cohort 1 | Jan - Apr 2026
+- Completed Track 1; built and deployed 3 live AI agents on Google Cloud Run
+- Selected for Builder Stories feature for publishing technical blog on SmartApply architecture
+
+MLH AI Hackfest 2026 | April 2026
+- Built and submitted Matcha Journal solo in under 24 hours; app deployed live
+
+Deloitte Data Analytics Job Simulation | Summer 2025
+- Analyzed business datasets using Excel and Tableau; built KPI dashboards
+
+CERTIFICATIONS
+- Google Generative AI Leader Professional Certificate
+- Google Data Analytics Certificate
+- IBM Data Analytics Professional Certificate
+- Amazon Aurora SQL Training
+- HackerRank: Java, SQL, Python
+
+TECHNICAL SKILLS
+Languages: Python, Java, C++, SQL, R
+Tools: Google ADK, Gemini, Vertex AI, Cloud Run, Firestore, Docker, LangChain, Tableau, Power BI, Git
+Concepts: Machine Learning, OOP, Data Structures, Cloud Computing, AI Agents, Data Visualization"""
+
+    return {"status": "success", "resume_text": resume, "job_title": job_title, "company": company}

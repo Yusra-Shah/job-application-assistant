@@ -10,7 +10,8 @@ from job_application_assistant.tools import (
     get_application_stats,
     create_calendar_event,
     get_applications_dashboard,
-    parse_resume_text
+    parse_resume_text,
+    generate_tailored_resume
 )
 
 load_dotenv()
@@ -88,10 +89,25 @@ Keep it concise and practical.""",
     output_key="interview_prep"
 )
 
+resume_agent = Agent(
+    name="resume_agent",
+    model=model,
+    description="Generates a tailored resume based on job requirements.",
+    instruction="""Using {job_analysis} and {match_result}: call generate_tailored_resume with:
+- job_title: the ROLE from job_analysis
+- company: the COMPANY from job_analysis
+- required_skills: the REQUIRED_SKILLS from job_analysis
+- matching_skills: the MATCHING_SKILLS from match_result
+- missing_skills: the MISSING_SKILLS from match_result
+Return the resume_text to the user and tell them they can copy and paste it.""",
+    tools=[generate_tailored_resume],
+    output_key="tailored_resume"
+)
+
 application_workflow = SequentialAgent(
     name="application_workflow",
     description="Full job application workflow.",
-    sub_agents=[analyzer_agent, matcher_agent, cover_letter_agent, email_agent, scheduler_agent, interview_prep_agent]
+    sub_agents=[analyzer_agent, matcher_agent, cover_letter_agent, email_agent, scheduler_agent, interview_prep_agent, resume_agent]
 )
 
 root_agent = Agent(
@@ -105,6 +121,6 @@ When the user asks for stats: call get_application_stats.
 When the user says update application [ID] to [status]: call update_application_status.
 When the user uploads or pastes resume text: call parse_resume_text with the text, then transfer to application_workflow.
 Greet the user as SmartApply and list what you can do.""",
-    tools=[get_all_applications, update_application_status, get_application_stats, parse_resume_text],
+    tools=[get_all_applications, update_application_status, get_application_stats, parse_resume_text, generate_tailored_resume],
     sub_agents=[application_workflow]
 )
